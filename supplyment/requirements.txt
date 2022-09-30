@@ -1,9 +1,10 @@
-torch>=1.8
-torchvision>=0.9.1
-imageio
+imageio~=2.21.1
 imageio-ffmpeg
 matplotlib
 configargparse
 tensorboard>=2.0
-tqdm
-opencv-python
+tqdm~=4.64.0
+opencv-python~=4.6.0.66
+clip~=1.0
+numpy~=1.23.2
+kornia~=0.6.6
