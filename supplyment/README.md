@@ -9,14 +9,37 @@ This project is built upon a [PyTorch implementation](https://github.com/yenchen
 Download `nerf_synthetic.zip` from [here](https://drive.google.com/drive/folders/128yBriW1IG_3NJ5Rp7APSTZsJqdJdfc1). Then unzip the file into the directiory
 '/data'.
 
-Download pretrained Nerf models from [here](https://drive.google.com/drive/folders/1jIr8dkvefrQmv737fFm2isiT6tqpbTbv). Then place it into the checkpoint directory.
+Download pretrained Nerf models from [here](https://drive.google.com/drive/folders/1jIr8dkvefrQmv737fFm2isiT6tqpbTbv). Then place it into the checkpoint directory. Point the script to the checkpoint via the `--ft_path` parameter.
+
+## Setup
+
+Create a Conda environment:
+
+```bash
+conda create --name clipnerfmod
+conda activate clipnerfmod
+conda install pip
+pip install --upgrade pip
+```
+
+Install PyTorch with CUDA backend:
+
+```bash
+conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
+```
+
+Install requirements:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Run
 
 To edit color of a pre-trained lego:
 
 ```
-python run_nerf_clip.py --config configs/lego.txt --use_clip --w_clip 1.0 
+python run_nerf_clip.py --config configs/lego.txt --use_clip --w_clip 1.0 --description "A green excavator" --ft_path checkpoints/lego_test/200000.tar --sample_scale 40 
 ```
 
 |  Parameter  | Discription  |
