@@ -805,9 +805,9 @@ def train():
         rgb_img = rgb.view(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
         rgb_img = rgb_img.permute(2,0,1).unsqueeze(0)
-        rgb_img_gray = kornia.rgb_to_grayscale(rgb_img)
+        rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
         target_img = target.permute(2,0,1).unsqueeze(0)
-        target_img_gray = kornia.rgb_to_grayscale(target_img)
+        target_img_gray = kornia.color.rgb_to_grayscale(target_img)
 
         optimizer.zero_grad()
 
@@ -818,7 +818,7 @@ def train():
         if 'rgb0' in extras:
             rgb0_img = extras['rgb0'].view(sample_scale, sample_scale, -1)
             rgb0_img = rgb0_img.permute(2,0,1).unsqueeze(0)
-            rgb0_img_gray = kornia.rgb_to_grayscale(rgb0_img)
+            rgb0_img_gray = kornia.color.rgb_to_grayscale(rgb0_img)
             img_loss0 = img2mse(rgb0_img_gray, target_img_gray)
             loss = loss + img_loss0
 
