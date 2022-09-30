@@ -14,10 +14,14 @@ from criteria.clip_loss import CLIPLoss
 import clip
 import kornia
 
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 np.random.seed(0)
 DEBUG = False
+writer = SummaryWriter()
 
 from math import sqrt, exp
 def get_select_inds(N_samples, iterations, random_scale=True, random_shift=True):
@@ -832,6 +836,8 @@ def train():
                 c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
                 loss = loss + c_loss_rgb0 * args.w_clip
 
+        writer.add_scalar("Loss/train", loss, i)
+        writer.flush()
         loss.backward()
         optimizer.step()
 
