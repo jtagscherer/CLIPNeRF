@@ -28,6 +28,13 @@ Install PyTorch with CUDA backend:
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
 ```
 
+Install CLIP:
+
+```bash
+pip install ftfy regex tqdm
+pip install git+https://github.com/openai/CLIP.git
+```
+
 Install requirements:
 
 ```bash
