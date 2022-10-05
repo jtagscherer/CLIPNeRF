@@ -762,16 +762,11 @@ def train():
     sample_scale = args.sample_scale
     start = start + 1
 
-    with torch.profiler.profile(
+    with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         record_shapes=True,
-        schedule=torch.profiler.schedule(
-            wait=5,  # during this phase profiler is not active
-            warmup=2,  # during this phase profiler starts tracing, but the results are discarded
-            active=6,  # during this phase profiler traces and records data
-            repeat=2),  # specifies an upper bound on the number of cycles
         with_stack=True  # enable stack tracing, adds extra profiling overhead
-    ) as profiler:
+    ) as prof:
         for i in trange(start, N_iters):
             # Sample random ray batch
             if use_batching:
@@ -897,7 +892,7 @@ def train():
 
             global_step += 1
 
-        print(profiler.key_averages().table(sort_by="cuda_time_total", row_limit=30))
+        print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
 
 
 if __name__=='__main__':
