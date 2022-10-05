@@ -892,7 +892,7 @@ def train():
 
             global_step += 1
 
-            if global_step > 1000:
+            if global_step > 50000:
                 break
 
     print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
