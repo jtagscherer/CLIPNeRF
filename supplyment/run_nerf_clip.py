@@ -892,7 +892,7 @@ def train():
 
             global_step += 1
 
-        print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
+    print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
 
 
 if __name__=='__main__':
