@@ -896,6 +896,7 @@ def train():
                 break
 
     print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
+    prof.export_chrome_trace("trace.json")
 
 
 if __name__=='__main__':
