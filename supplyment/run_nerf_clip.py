@@ -762,141 +762,143 @@ def train():
     sample_scale = args.sample_scale
     start = start + 1
 
-    with profile(
+    '''with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         record_shapes=True,
         with_stack=True  # enable stack tracing, adds extra profiling overhead
-    ) as prof:
-        for i in trange(start, N_iters):
-            # Sample random ray batch
-            if use_batching:
-                # Random over all images
-                batch = rays_rgb[i_batch:i_batch+N_rand] # [B, 2+1, 3*?]
-                batch = torch.transpose(batch, 0, 1)
-                batch_rays, target_s = batch[:2], batch[2]
+    ) as prof:'''
+    for i in trange(start, N_iters):
+        # Sample random ray batch
+        if use_batching:
+            # Random over all images
+            batch = rays_rgb[i_batch:i_batch+N_rand] # [B, 2+1, 3*?]
+            batch = torch.transpose(batch, 0, 1)
+            batch_rays, target_s = batch[:2], batch[2]
 
-                print ("Random over all images:", target_s.shape)
+            print ("Random over all images:", target_s.shape)
 
-                i_batch += N_rand
-                if i_batch >= rays_rgb.shape[0]:
-                    print("Shuffle data after an epoch!")
-                    rand_idx = torch.randperm(rays_rgb.shape[0])
-                    rays_rgb = rays_rgb[rand_idx]
-                    i_batch = 0
+            i_batch += N_rand
+            if i_batch >= rays_rgb.shape[0]:
+                print("Shuffle data after an epoch!")
+                rand_idx = torch.randperm(rays_rgb.shape[0])
+                rays_rgb = rays_rgb[rand_idx]
+                i_batch = 0
 
-            else:
-                # Random from one image
-                img_i = np.random.choice(i_train)
-                target = images[img_i]
-                target = torch.Tensor(target).to(device)
-                pose = poses[img_i, :3,:4]
+        else:
+            # Random from one image
+            img_i = np.random.choice(i_train)
+            target = images[img_i]
+            target = torch.Tensor(target).to(device)
+            pose = poses[img_i, :3,:4]
 
-                rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
+            rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
 
-                select_inds = get_select_inds(sample_scale * sample_scale, i)
+            select_inds = get_select_inds(sample_scale * sample_scale, i)
 
-                rays_o = torch.nn.functional.grid_sample(rays_o.permute(2, 0, 1).unsqueeze(0),
-                                                         select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
-                rays_d = torch.nn.functional.grid_sample(rays_d.permute(2, 0, 1).unsqueeze(0),
-                                                         select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
-                rays_o = rays_o.permute(1, 2, 0).view(-1, 3)
-                rays_d = rays_d.permute(1, 2, 0).view(-1, 3)
+            rays_o = torch.nn.functional.grid_sample(rays_o.permute(2, 0, 1).unsqueeze(0),
+                                                     select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
+            rays_d = torch.nn.functional.grid_sample(rays_d.permute(2, 0, 1).unsqueeze(0),
+                                                     select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
+            rays_o = rays_o.permute(1, 2, 0).view(-1, 3)
+            rays_d = rays_d.permute(1, 2, 0).view(-1, 3)
 
-                target_s = torch.nn.functional.grid_sample(target.permute(2, 0, 1).unsqueeze(0),
-                                                         select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
-                target_s = target_s.permute(1, 2, 0).view(-1, 3)
+            target_s = torch.nn.functional.grid_sample(target.permute(2, 0, 1).unsqueeze(0),
+                                                     select_inds.unsqueeze(0), mode='bilinear', align_corners=True)[0]
+            target_s = target_s.permute(1, 2, 0).view(-1, 3)
 
-                batch_rays = torch.stack([rays_o, rays_d], 0)
+            batch_rays = torch.stack([rays_o, rays_d], 0)
 
-            # Optimization loop
-            rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, rays=batch_rays,
-                                                    verbose=i < 10, retraw=True,
-                                                    **render_kwargs_train)
+        # Optimization loop
+        rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, rays=batch_rays,
+                                                verbose=i < 10, retraw=True,
+                                                **render_kwargs_train)
 
-            rgb_img = rgb.view(sample_scale, sample_scale, -1)
-            target = target_s.view(sample_scale, sample_scale, -1)
-            rgb_img = rgb_img.permute(2,0,1).unsqueeze(0)
-            rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
-            target_img = target.permute(2,0,1).unsqueeze(0)
-            target_img_gray = kornia.color.rgb_to_grayscale(target_img)
+        rgb_img = rgb.view(sample_scale, sample_scale, -1)
+        target = target_s.view(sample_scale, sample_scale, -1)
+        rgb_img = rgb_img.permute(2,0,1).unsqueeze(0)
+        rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
+        target_img = target.permute(2,0,1).unsqueeze(0)
+        target_img_gray = kornia.color.rgb_to_grayscale(target_img)
 
-            optimizer.zero_grad()
+        optimizer.zero_grad()
 
-            img_loss = img2mse(rgb_img_gray, target_img_gray)
-            loss = img_loss
-            psnr = mse2psnr(img_loss)
+        img_loss = img2mse(rgb_img_gray, target_img_gray)
+        loss = img_loss
+        psnr = mse2psnr(img_loss)
+
+        if 'rgb0' in extras:
+            rgb0_img = extras['rgb0'].view(sample_scale, sample_scale, -1)
+            rgb0_img = rgb0_img.permute(2,0,1).unsqueeze(0)
+            rgb0_img_gray = kornia.color.rgb_to_grayscale(rgb0_img)
+            img_loss0 = img2mse(rgb0_img_gray, target_img_gray)
+            loss = loss + img_loss0
+
+        if args.use_clip:
+            gen_img = rgb_img
+            c_loss = clip_loss(gen_img, text_inputs)
+            loss = loss + c_loss * args.w_clip
 
             if 'rgb0' in extras:
-                rgb0_img = extras['rgb0'].view(sample_scale, sample_scale, -1)
-                rgb0_img = rgb0_img.permute(2,0,1).unsqueeze(0)
-                rgb0_img_gray = kornia.color.rgb_to_grayscale(rgb0_img)
-                img_loss0 = img2mse(rgb0_img_gray, target_img_gray)
-                loss = loss + img_loss0
+                gen_img_rgb0 = extras['rgb0'].view(sample_scale, sample_scale, -1).permute(2,0,1).unsqueeze(0)
+                c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
+                loss = loss + c_loss_rgb0 * args.w_clip
 
+        writer.add_scalar("Loss/train", loss, i)
+        writer.flush()
+        loss.backward()
+        optimizer.step()
+        prof.step()
+
+        # Update learning rate
+        decay_rate = 0.1
+        decay_steps = args.lrate_decay * 1000
+        new_lrate = args.lrate * (decay_rate ** (global_step / decay_steps))
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = new_lrate
+
+        # Rest is logging
+        if i%args.i_weights==0:
+            path = os.path.join(basedir, expname, '{:06d}.tar'.format(i))
+            torch.save({
+                'global_step': global_step,
+                'network_fn_state_dict': render_kwargs_train['network_fn'].state_dict(),
+                'network_fine_state_dict': render_kwargs_train['network_fine'].state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            }, path)
+            print('Saved checkpoints at', path)
+
+        if i%args.i_video==0 and i > 0:
+            # Turn on testing mode
+            with torch.no_grad():
+                rgbs, disps = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test)
+            print('Done, saving', rgbs.shape, disps.shape)
+            moviebase = os.path.join(basedir, expname, '{}_spiral_{:06d}_'.format(expname, i))
+            imageio.mimwrite(moviebase + 'rgb.mp4', to8b(rgbs), fps=30, quality=8)
+            imageio.mimwrite(moviebase + 'disp.mp4', to8b(disps / np.max(disps)), fps=30, quality=8)
+
+        if i%args.i_testset==0 and i > 0:
+            testsavedir = os.path.join(basedir, expname, 'testset_{:06d}'.format(i))
+            os.makedirs(testsavedir, exist_ok=True)
+            print('test poses shape', poses[i_test].shape)
+            with torch.no_grad():
+                render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk, render_kwargs_test, gt_imgs=images[i_test], savedir=testsavedir)
+            print('Saved test set')
+
+        if i%args.i_print==0:
             if args.use_clip:
-                gen_img = rgb_img
-                c_loss = clip_loss(gen_img, text_inputs)
-                loss = loss + c_loss * args.w_clip
+                tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  CLoss: {c_loss.item()} PSNR: {psnr.item()}")
+            else:
+                tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()} PSNR: {psnr.item()}")
 
-                if 'rgb0' in extras:
-                    gen_img_rgb0 = extras['rgb0'].view(sample_scale, sample_scale, -1).permute(2,0,1).unsqueeze(0)
-                    c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
-                    loss = loss + c_loss_rgb0 * args.w_clip
+        global_step += 1
 
-            writer.add_scalar("Loss/train", loss, i)
-            writer.flush()
-            loss.backward()
-            optimizer.step()
-            prof.step()
-
-            # Update learning rate
-            decay_rate = 0.1
-            decay_steps = args.lrate_decay * 1000
-            new_lrate = args.lrate * (decay_rate ** (global_step / decay_steps))
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = new_lrate
-
-            # Rest is logging
-            if i%args.i_weights==0:
-                path = os.path.join(basedir, expname, '{:06d}.tar'.format(i))
-                torch.save({
-                    'global_step': global_step,
-                    'network_fn_state_dict': render_kwargs_train['network_fn'].state_dict(),
-                    'network_fine_state_dict': render_kwargs_train['network_fine'].state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                }, path)
-                print('Saved checkpoints at', path)
-
-            if i%args.i_video==0 and i > 0:
-                # Turn on testing mode
-                with torch.no_grad():
-                    rgbs, disps = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test)
-                print('Done, saving', rgbs.shape, disps.shape)
-                moviebase = os.path.join(basedir, expname, '{}_spiral_{:06d}_'.format(expname, i))
-                imageio.mimwrite(moviebase + 'rgb.mp4', to8b(rgbs), fps=30, quality=8)
-                imageio.mimwrite(moviebase + 'disp.mp4', to8b(disps / np.max(disps)), fps=30, quality=8)
-
-            if i%args.i_testset==0 and i > 0:
-                testsavedir = os.path.join(basedir, expname, 'testset_{:06d}'.format(i))
-                os.makedirs(testsavedir, exist_ok=True)
-                print('test poses shape', poses[i_test].shape)
-                with torch.no_grad():
-                    render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk, render_kwargs_test, gt_imgs=images[i_test], savedir=testsavedir)
-                print('Saved test set')
-
-            if i%args.i_print==0:
-                if args.use_clip:
-                    tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  CLoss: {c_loss.item()} PSNR: {psnr.item()}")
-                else:
-                    tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()} PSNR: {psnr.item()}")
-
-            global_step += 1
-
+    '''
             if global_step > 50000:
                 break
 
     print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
     prof.export_chrome_trace("trace.json")
+    '''
 
 
 if __name__=='__main__':
