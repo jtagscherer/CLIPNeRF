@@ -16,7 +16,6 @@ import kornia
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
-from torch.profiler import profile, ProfilerActivity
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -762,11 +761,6 @@ def train():
     sample_scale = args.sample_scale
     start = start + 1
 
-    '''with profile(
-        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-        record_shapes=True,
-        with_stack=True  # enable stack tracing, adds extra profiling overhead
-    ) as prof:'''
     for i in trange(start, N_iters):
         # Sample random ray batch
         if use_batching:
@@ -891,14 +885,6 @@ def train():
                 tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()} PSNR: {psnr.item()}")
 
         global_step += 1
-
-    '''
-            if global_step > 50000:
-                break
-
-    print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=30))
-    prof.export_chrome_trace("trace.json")
-    '''
 
 
 if __name__=='__main__':
