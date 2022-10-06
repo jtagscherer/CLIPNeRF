@@ -893,7 +893,7 @@ def train():
 
         timing_data_count += 1
 
-        if timing_data_count % 10000 == 0:
+        if timing_data_count % 1000 == 0:
             print(f'Average times in milliseconds at {timing_data_count} steps:')
             print(average_timings)
 
