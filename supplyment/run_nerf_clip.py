@@ -842,7 +842,6 @@ def train():
         writer.flush()
         loss.backward()
         optimizer.step()
-        prof.step()
 
         # Update learning rate
         decay_rate = 0.1
