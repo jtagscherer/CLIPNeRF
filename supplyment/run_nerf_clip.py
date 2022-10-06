@@ -762,12 +762,33 @@ def train():
     sample_scale = args.sample_scale
     start = start + 1
 
+    start_ray_event = torch.cuda.Event(enable_timing=True)
+    end_ray_event = torch.cuda.Event(enable_timing=True)
+    start_render_event = torch.cuda.Event(enable_timing=True)
+    end_render_event = torch.cuda.Event(enable_timing=True)
+    start_mse_event = torch.cuda.Event(enable_timing=True)
+    end_mse_event = torch.cuda.Event(enable_timing=True)
+    start_clip_event = torch.cuda.Event(enable_timing=True)
+    end_clip_event = torch.cuda.Event(enable_timing=True)
+    start_backwards_event = torch.cuda.Event(enable_timing=True)
+    end_backwards_event = torch.cuda.Event(enable_timing=True)
+
+    average_timings = {
+        'ray': 0,
+        'render': 0,
+        'mse': 0,
+        'clip': 0,
+        'backwards': 0
+    }
+    timing_data_count = 0
+
     '''with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         record_shapes=True,
         with_stack=True  # enable stack tracing, adds extra profiling overhead
     ) as prof:'''
     for i in trange(start, N_iters):
+        start_ray_event.record()
         # Sample random ray batch
         if use_batching:
             # Random over all images
@@ -807,7 +828,9 @@ def train():
             target_s = target_s.permute(1, 2, 0).view(-1, 3)
 
             batch_rays = torch.stack([rays_o, rays_d], 0)
+        end_ray_event.record()
 
+        start_render_event.record()
         # Optimization loop
         rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, rays=batch_rays,
                                                 verbose=i < 10, retraw=True,
@@ -819,9 +842,11 @@ def train():
         rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
         target_img = target.permute(2,0,1).unsqueeze(0)
         target_img_gray = kornia.color.rgb_to_grayscale(target_img)
+        end_render_event.record()
 
         optimizer.zero_grad()
 
+        start_mse_event.record()
         img_loss = img2mse(rgb_img_gray, target_img_gray)
         loss = img_loss
         psnr = mse2psnr(img_loss)
@@ -832,7 +857,9 @@ def train():
             rgb0_img_gray = kornia.color.rgb_to_grayscale(rgb0_img)
             img_loss0 = img2mse(rgb0_img_gray, target_img_gray)
             loss = loss + img_loss0
+        end_mse_event.record()
 
+        start_clip_event.record()
         if args.use_clip:
             gen_img = rgb_img
             c_loss = clip_loss(gen_img, text_inputs)
@@ -842,12 +869,33 @@ def train():
                 gen_img_rgb0 = extras['rgb0'].view(sample_scale, sample_scale, -1).permute(2,0,1).unsqueeze(0)
                 c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
                 loss = loss + c_loss_rgb0 * args.w_clip
+        end_clip_event.record()
 
         writer.add_scalar("Loss/train", loss, i)
         writer.flush()
+        start_backwards_event.record()
         loss.backward()
         optimizer.step()
-        prof.step()
+        end_backwards_event.record()
+        # prof.step()
+
+        torch.cuda.synchronize()
+        average_timings['ray'] = ((average_timings['ray'] * timing_data_count) + start_ray_event.elapsed_time(
+            end_ray_event)) / (timing_data_count + 1)
+        average_timings['render'] = ((average_timings['render'] * timing_data_count) + start_render_event.elapsed_time(
+            end_render_event)) / (timing_data_count + 1)
+        average_timings['mse'] = ((average_timings['mse'] * timing_data_count) + start_mse_event.elapsed_time(
+            end_mse_event)) / (timing_data_count + 1)
+        average_timings['clip'] = ((average_timings['clip'] * timing_data_count) + start_clip_event.elapsed_time(
+            end_clip_event)) / (timing_data_count + 1)
+        average_timings['backwards'] = ((average_timings['backwards'] * timing_data_count) + start_backwards_event.elapsed_time(
+            end_backwards_event)) / (timing_data_count + 1)
+
+        timing_data_count += 1
+
+        if timing_data_count % 10000 == 0:
+            print(f'Average times in milliseconds at {timing_data_count} steps:')
+            print(average_timings)
 
         # Update learning rate
         decay_rate = 0.1
