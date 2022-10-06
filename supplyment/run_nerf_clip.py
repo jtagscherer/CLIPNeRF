@@ -817,7 +817,7 @@ def train():
         optimizer.zero_grad()
 
         img_loss = img2mse(rgb_img_gray, target_img_gray)
-        writer.add_scalar("Loss/train/mse", img_loss, i)
+        writer.add_scalar("Loss/train/mse1", img_loss, i)
         loss = img_loss
         psnr = mse2psnr(img_loss)
 
@@ -826,17 +826,19 @@ def train():
             rgb0_img = rgb0_img.permute(2,0,1).unsqueeze(0)
             rgb0_img_gray = kornia.color.rgb_to_grayscale(rgb0_img)
             img_loss0 = img2mse(rgb0_img_gray, target_img_gray)
+            writer.add_scalar("Loss/train/mse2", img_loss0, i)
             loss = loss + img_loss0
 
         if args.use_clip:
             gen_img = rgb_img
             c_loss = clip_loss(gen_img, text_inputs)
-            writer.add_scalar("Loss/train/clip", c_loss, i)
+            writer.add_scalar("Loss/train/clip1", c_loss, i)
             loss = loss + c_loss * args.w_clip
 
             if 'rgb0' in extras:
                 gen_img_rgb0 = extras['rgb0'].view(sample_scale, sample_scale, -1).permute(2,0,1).unsqueeze(0)
                 c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
+                writer.add_scalar("Loss/train/clip2", c_loss_rgb0, i)
                 loss = loss + c_loss_rgb0 * args.w_clip
 
         writer.flush()
