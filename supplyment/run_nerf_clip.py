@@ -817,6 +817,7 @@ def train():
         optimizer.zero_grad()
 
         img_loss = img2mse(rgb_img_gray, target_img_gray)
+        writer.add_scalar("Loss/train/mse", img_loss, i)
         loss = img_loss
         psnr = mse2psnr(img_loss)
 
@@ -830,6 +831,7 @@ def train():
         if args.use_clip:
             gen_img = rgb_img
             c_loss = clip_loss(gen_img, text_inputs)
+            writer.add_scalar("Loss/train/clip", c_loss, i)
             loss = loss + c_loss * args.w_clip
 
             if 'rgb0' in extras:
@@ -837,7 +839,6 @@ def train():
                 c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
                 loss = loss + c_loss_rgb0 * args.w_clip
 
-        writer.add_scalar("Loss/train", loss, i)
         writer.flush()
         loss.backward()
         optimizer.step()
