@@ -755,6 +755,7 @@ def train():
     print('VAL views are', i_val)
 
     # CLIP loss
+    print(f'Prompt: {args.description}')
     text_inputs = torch.cat([clip.tokenize(args.description)]).to(device)
     clip_loss = CLIPLoss()
 
