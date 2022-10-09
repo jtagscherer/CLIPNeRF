@@ -5,9 +5,10 @@ queries=( "Concept art %s; trending on artstation; Unreal Engine" "Pencil sketch
 
 for dataset in "${datasets[@]}"
 do
-  for query in "${queries[@]}"
+  for i in "${!queries[@]}"
   do
-    printf -v formatted_query "${query}" "${dataset}"
-    python run_nerf_clip.py --config configs/${dataset}.txt --use_clip --w_clip 1.0 --description '${formatted_query}' --ft_path checkpoints/${dataset}.tar --sample_scale 40 --i_print 5000 --i_img 5000 --i_weights 5000 --i_testset 5000 --i_video 5000
+    printf -v formatted_query "${queries[$i]}" "${dataset}"
+    printf -v expname "%s-%d" "${dataset}" ${i}
+    python run_nerf_clip.py --expname ${expname} --config configs/${dataset}.txt --use_clip --w_clip 1.0 --description \'${formatted_query}\' --ft_path checkpoints/${dataset}.tar --sample_scale 40 --i_print 5000 --i_img 5000 --i_weights 5000 --i_testset 5000 --i_video 5000
   done
 done
