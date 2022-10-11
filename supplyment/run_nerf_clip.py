@@ -780,16 +780,13 @@ def train():
                 i_batch = 0
 
         else:
+            raise Exception("Unsupported!")
+
             # Random from one image
             img_i = np.random.choice(i_train)
             target = images[img_i]
             target = torch.Tensor(target).to(device)
             pose = poses[img_i, :3,:4]
-
-            if target.size()[0] == 3072:
-                sample_scale = 32
-            elif target.size()[0] == 2448:
-                sample_scale = 12
 
             rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
 
@@ -812,6 +809,12 @@ def train():
         rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, rays=batch_rays,
                                                 verbose=i < 10, retraw=True,
                                                 **render_kwargs_train)
+
+        rgb_size = rgb.size()[0] * rgb.size()[1]
+        if rgb_size == 3072:
+            sample_scale = 32
+        elif rgb_size == 2448:
+            sample_scale = 12
 
         rgb_img = rgb.view(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
