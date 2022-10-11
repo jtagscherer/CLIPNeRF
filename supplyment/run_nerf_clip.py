@@ -786,6 +786,11 @@ def train():
             target = torch.Tensor(target).to(device)
             pose = poses[img_i, :3,:4]
 
+            if target.size()[0] == 3072:
+                sample_scale = 32
+            elif target.size()[0] == 2448:
+                sample_scale = 12
+
             rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
 
             select_inds = get_select_inds(sample_scale * sample_scale, i)
