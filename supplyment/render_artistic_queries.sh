@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets=( chair drums fern ficus flower fortress horns hotdog leaves lego materials mic orchids room ship trex )
+datasets=( fern flower fortress horns lego trex )
 queries=( "Concept art %s; trending on artstation; Unreal Engine" "Pencil sketch %s; Art on Instagram" "Neolithic cave painting %s" "Red %s" )
 
 for dataset in "${datasets[@]}"
