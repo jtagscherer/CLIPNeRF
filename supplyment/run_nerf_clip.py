@@ -815,6 +815,8 @@ def train():
             sample_scale = 32
         elif rgb_size == 2448:
             sample_scale = 12
+        elif rgb_size == 1104:
+            sample_scale = 4
 
         rgb_img = rgb.reshape(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
