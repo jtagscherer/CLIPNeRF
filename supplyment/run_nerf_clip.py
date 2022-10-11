@@ -808,7 +808,7 @@ def train():
                                                 verbose=i < 10, retraw=True,
                                                 **render_kwargs_train)
 
-        rgb_img = rgb.reshape(sample_scale, sample_scale, -1)
+        rgb_img = rgb.view(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
         rgb_img = rgb_img.permute(2,0,1).unsqueeze(0)
         rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
