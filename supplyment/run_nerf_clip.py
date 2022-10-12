@@ -821,14 +821,13 @@ def train():
         try:
             rgb_img = rgb.reshape(sample_scale, sample_scale, -1)
             target = target_s.reshape(sample_scale, sample_scale, -1)
+            rgb_img = rgb_img.permute(2, 0, 1).unsqueeze(0)
+            rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
+            target_img = target.permute(2, 0, 1).unsqueeze(0)
+            target_img_gray = kornia.color.rgb_to_grayscale(target_img)
         except RuntimeError as e:
             print(f"Encountered Runtime Error, skipping: {e}")
             continue
-
-        rgb_img = rgb_img.permute(2,0,1).unsqueeze(0)
-        rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
-        target_img = target.permute(2,0,1).unsqueeze(0)
-        target_img_gray = kornia.color.rgb_to_grayscale(target_img)
 
         optimizer.zero_grad()
 
