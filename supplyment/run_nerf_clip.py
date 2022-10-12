@@ -844,13 +844,13 @@ def train():
             gen_img = rgb_img
             c_loss = clip_loss(gen_img, text_inputs)
             writer.add_scalar("Loss/train/clip1", c_loss, i)
-            loss + c_loss * args.w_clip  # loss = c_loss
+            loss = loss + c_loss * args.w_clip  # loss = c_loss
 
             if 'rgb0' in extras:
                 gen_img_rgb0 = extras['rgb0'].view(sample_scale, sample_scale, -1).permute(2,0,1).unsqueeze(0)
                 c_loss_rgb0 = clip_loss(gen_img_rgb0, text_inputs)
                 writer.add_scalar("Loss/train/clip2", c_loss_rgb0, i)
-                loss + c_loss_rgb0 * args.w_clip  # loss = loss + c_loss_rgb0
+                loss = loss + c_loss_rgb0 * args.w_clip  # loss = loss + c_loss_rgb0
 
         writer.flush()
         loss.backward()
