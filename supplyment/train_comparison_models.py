@@ -57,5 +57,5 @@ for scene in scenes.values():
     current_query = current_query[:1].upper() + current_query[1:]
 
     # Render stylized scene
-    command = f'run_nerf_clip.py --expname {scene["dataset"]}_comparison --config configs/{scene["dataset"]}.txt --use_clip --w_clip 1.0 --description "{current_query}" --ft_path checkpoints/{scene["dataset"]}.tar --sample_scale 40 --i_print 5000 --i_img 5000 --i_weights 5000 --i_testset 5000 --i_video 5000'
+    command = f'python run_nerf_clip.py --expname {scene["dataset"]}_comparison --config configs/{scene["dataset"]}.txt --use_clip --w_clip 1.0 --description "{current_query}" --ft_path checkpoints/{scene["dataset"]}.tar --sample_scale 40 --i_print 5000 --i_img 5000 --i_weights 5000 --i_testset 5000 --i_video 5000'
     os.system(command)
