@@ -770,7 +770,7 @@ def train():
             batch = torch.transpose(batch, 0, 1)
             batch_rays, target_s = batch[:2], batch[2]
 
-            print ("Random over all images:", target_s.shape)
+            # print ("Random over all images:", target_s.shape)
 
             i_batch += N_rand
             if i_batch >= rays_rgb.shape[0]:
