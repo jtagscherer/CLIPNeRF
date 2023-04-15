@@ -780,7 +780,7 @@ def train():
                 i_batch = 0
 
         else:
-            raise Exception("Unsupported!")
+            # raise Exception("Unsupported!")
 
             # Random from one image
             img_i = np.random.choice(i_train)
@@ -810,13 +810,13 @@ def train():
                                                 verbose=i < 10, retraw=True,
                                                 **render_kwargs_train)
 
-        rgb_size = rgb.size()[0] * rgb.size()[1]
+        '''rgb_size = rgb.size()[0] * rgb.size()[1]
         if rgb_size == 3072:
             sample_scale = 32
         elif rgb_size == 2448:
             sample_scale = 12
         elif rgb_size == 1104:
-            sample_scale = 4
+            sample_scale = 4'''
 
         try:
             rgb_img = rgb.reshape(sample_scale, sample_scale, -1)
