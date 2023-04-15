@@ -723,7 +723,7 @@ def train():
 
     # Prepare raybatch tensor if batching random rays
     N_rand = args.N_rand
-    use_batching = True  # not args.no_batching
+    use_batching = not args.no_batching
     if use_batching:
         # For random ray batching
         print('get rays')
@@ -810,7 +810,7 @@ def train():
                                                 verbose=i < 10, retraw=True,
                                                 **render_kwargs_train)
 
-        rgb_size = rgb.size()[0] * rgb.size()[1]
+        '''rgb_size = rgb.size()[0] * rgb.size()[1]
         if rgb_size == 3072:
             sample_scale = 32
         elif rgb_size == 2448:
@@ -818,7 +818,7 @@ def train():
         elif rgb_size == 1104:
             sample_scale = 4
 
-        '''rgb_img = rgb.view(sample_scale, sample_scale, -1)
+        rgb_img = rgb.view(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
         rgb_img = rgb_img.permute(2, 0, 1).unsqueeze(0)
         rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)

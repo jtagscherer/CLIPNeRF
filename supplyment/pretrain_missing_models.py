@@ -6,35 +6,10 @@ scenes = {
     "article": "a",
     "name": "chair"
   },
-  "drums": {
-    "dataset": "drums",
-    "article": "",
-    "name": "drums"
-  },
-  "ficus": {
-    "dataset": "ficus",
-    "article": "a",
-    "name": "ficus plant"
-  },
   "hotdog": {
     "dataset": "hotdog",
     "article": "a",
     "name": "hotdog"
-  },
-  "materials": {
-    "dataset": "materials",
-    "article": "",
-    "name": "spheres"
-  },
-  "mic": {
-    "dataset": "mic",
-    "article": "a",
-    "name": "microphone"
-  },
-  "ship": {
-    "dataset": "ship",
-    "article": "a",
-    "name": "ship"
   }
 }
 
