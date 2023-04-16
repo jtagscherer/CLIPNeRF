@@ -167,7 +167,14 @@ def render(H, W, K, chunk=1024*32, rays=None, c2w=None, ndc=True,
     return ret_list + [ret_dict]
 
 
-def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedir=None, render_factor=0):
+from metrics.clip_metric import CLIPMetric
+from metrics.clip_directional_metric import CLIPDirectionalMetric
+from metrics.clip_temporal_consistency_metric import CLIPTemporalConsistencyMetric
+from metrics.consistency_metric import ConsistencyMetric
+from metrics.fid_metric import FIDMetric
+
+
+def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedir=None, render_factor=0, source_prompt=None, target_prompt=None):
 
     H, W, focal = hwf
 
@@ -176,6 +183,22 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         H = H//render_factor
         W = W//render_factor
         focal = focal/render_factor
+
+    clip_metric = CLIPMetric()
+    clip_directional_metric = CLIPDirectionalMetric()
+    clip_temporal_consistency_metric = CLIPTemporalConsistencyMetric()
+    consistency_metric = ConsistencyMetric()
+    fid_metric = FIDMetric()
+
+    short_range_frame_queue = []
+    long_range_frame_queue = []
+    clip_temporal_consistency_queue = []
+
+    clip_metrics = []
+    clip_directional_metrics = []
+    clip_temporal_consistency_metrics = []
+    short_range_3d_consistency_metrics = []
+    long_range_3d_consistency_metrics = []
 
     rgbs = []
     disps = []
@@ -189,6 +212,51 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         disps.append(disp.cpu().numpy())
         if i==0:
             print(rgb.shape, disp.shape)
+
+        clip_metrics.append(clip_metric.compute(
+            image=rgb,
+            text=target_prompt
+        ))
+
+        clip_directional_metrics.append(clip_directional_metric.compute(
+            image_source=gt_imgs[i],
+            image_target=rgb,
+            text_source=source_prompt,
+            text_target=target_prompt
+        ))
+
+        clip_temporal_consistency_queue.append({
+            'source': gt_imgs[i].clone(),
+            'target': rgb.clone()
+        })
+
+        if len(clip_temporal_consistency_queue) > 2:
+            item = clip_temporal_consistency_queue.pop(0)
+            clip_temporal_consistency_metrics.append(clip_temporal_consistency_metric.compute(
+                image_source_0=item['source'],
+                image_target_0=item['target'],
+                image_target_1=rgb
+            ))
+
+        short_range_frame_queue.append(rgb.clone().cpu())
+        long_range_frame_queue.append(rgb.clone().cpu())
+
+        if len(short_range_frame_queue) > 2:
+            short_range_3d_consistency_metrics.append(consistency_metric.compute(
+                first_frame=short_range_frame_queue.pop(0),
+                second_frame=rgb.clone().cpu()
+            ))
+
+        if len(long_range_frame_queue) > 8:
+            long_range_3d_consistency_metrics.append(consistency_metric.compute(
+                first_frame=long_range_frame_queue.pop(0),
+                second_frame=rgb.clone().cpu()
+            ))
+
+        fid_metric.update(
+            ground_truth=gt_imgs[i],
+            prediction=rgb
+        )
 
         """
         if gt_imgs is not None and render_factor==0:
@@ -204,6 +272,21 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
 
     rgbs = np.stack(rgbs, 0)
     disps = np.stack(disps, 0)
+
+    # Print metrics
+    clip_metrics = np.asarray(clip_metrics)
+    clip_directional_metrics = np.asarray(clip_directional_metrics)
+    clip_temporal_consistency_metrics = np.asarray(clip_temporal_consistency_metrics)
+    short_range_3d_consistency_metrics = np.asarray(short_range_3d_consistency_metrics)
+    long_range_3d_consistency_metrics = np.asarray(long_range_3d_consistency_metrics)
+
+    print('METRICS')
+    print(f'CLIP: Mean {clip_metrics.mean()}, Std {clip_metrics.std()}')
+    print(f'CLIP Directional: Mean {clip_directional_metrics.mean()}, Std {clip_directional_metrics.std()}')
+    print(f'CLIP Temporal Consistency: Mean {clip_temporal_consistency_metrics.mean()}, Std {clip_temporal_consistency_metrics.std()}')
+    print(f'Short-Range 3D Consistency: Mean {short_range_3d_consistency_metrics.mean()}, Std {short_range_3d_consistency_metrics.std()}')
+    print(f'Long-Range 3D Consistency: Mean {long_range_3d_consistency_metrics.mean()}, Std {long_range_3d_consistency_metrics.std()}')
+    print(f'FID: {fid_metric.compute()}')
 
     return rgbs, disps
 
@@ -571,6 +654,8 @@ def config_parser():
     parser.add_argument("--i_video",   type=int, default=200,
                         help='frequency of render_poses video saving')
     # clip constrain
+    parser.add_argument("--source_prompt", type=str, default="A yellow excavator",
+                        help="a description of the original prompt")
     parser.add_argument("--description", type=str, default="A green excavator", help="the text that guides the editing/generation (Or: A photo of a XXX excavator)")
     parser.add_argument("--use_clip", action='store_true', help='whether use clip loss')
     parser.add_argument("--use_alpha", action='store_true', help='whether finetune alpha layers')
@@ -715,7 +800,7 @@ def train():
             os.makedirs(testsavedir, exist_ok=True)
             print('test poses shape', render_poses.shape)
 
-            rgbs, _ = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test, gt_imgs=images, savedir=testsavedir, render_factor=args.render_factor)
+            rgbs, _ = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test, gt_imgs=images, savedir=testsavedir, render_factor=args.render_factor, source_prompt=args.source_prompt, target_prompt=args.description)
             print('Done rendering', testsavedir)
             imageio.mimwrite(os.path.join(testsavedir, 'video.mp4'), to8b(rgbs), fps=30, quality=8)
 
