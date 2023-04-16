@@ -816,16 +816,16 @@ def train():
         elif rgb_size == 2448:
             sample_scale = 12
         elif rgb_size == 1104:
-            sample_scale = 4
+            sample_scale = 4'''
 
         rgb_img = rgb.view(sample_scale, sample_scale, -1)
         target = target_s.view(sample_scale, sample_scale, -1)
         rgb_img = rgb_img.permute(2, 0, 1).unsqueeze(0)
         rgb_img_gray = kornia.color.rgb_to_grayscale(rgb_img)
         target_img = target.permute(2, 0, 1).unsqueeze(0)
-        target_img_gray = kornia.color.rgb_to_grayscale(target_img)'''
+        target_img_gray = kornia.color.rgb_to_grayscale(target_img)
 
-        try:
+        '''try:
             rgb_img = rgb.reshape(sample_scale, sample_scale, -1)
             target = target_s.reshape(sample_scale, sample_scale, -1)
             rgb_img = rgb_img.permute(2, 0, 1).unsqueeze(0)
@@ -834,7 +834,7 @@ def train():
             target_img_gray = kornia.color.rgb_to_grayscale(target_img)
         except Exception as e:
             print(f"Encountered Runtime Error, skipping: {e}")
-            continue
+            continue'''
 
         optimizer.zero_grad()
 
