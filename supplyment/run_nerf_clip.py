@@ -272,18 +272,12 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             filename = os.path.join(savedir, '{:03d}.png'.format(i))
             imageio.imwrite(filename, rgb8)
 
-        # DEBUG
-        if i > 4:
-            break
-
 
     rgbs = np.stack(rgbs, 0)
     disps = np.stack(disps, 0)
 
     # Print metrics
-    print(f'Array: {clip_metrics}')
     clip_metrics = np.asarray(clip_metrics)
-    print(f'Np: {clip_metrics}')
     clip_directional_metrics = np.asarray(clip_directional_metrics)
     clip_temporal_consistency_metrics = np.asarray(clip_temporal_consistency_metrics)
     short_range_3d_consistency_metrics = np.asarray(short_range_3d_consistency_metrics)
