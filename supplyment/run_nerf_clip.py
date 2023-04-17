@@ -213,6 +213,8 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         if i==0:
             print(rgb.shape, disp.shape)
 
+        prediction = rgb.transpose(2, 0, 1)
+
         clip_metrics.append(clip_metric.compute(
             image=rgb,
             text=target_prompt
@@ -220,14 +222,14 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
 
         clip_directional_metrics.append(clip_directional_metric.compute(
             image_source=gt_imgs[i],
-            image_target=rgb,
+            image_target=prediction,
             text_source=source_prompt,
             text_target=target_prompt
         ))
 
         clip_temporal_consistency_queue.append({
             'source': gt_imgs[i].clone(),
-            'target': rgb.clone()
+            'target': prediction.clone()
         })
 
         if len(clip_temporal_consistency_queue) > 2:
@@ -235,27 +237,27 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             clip_temporal_consistency_metrics.append(clip_temporal_consistency_metric.compute(
                 image_source_0=item['source'],
                 image_target_0=item['target'],
-                image_target_1=rgb
+                image_target_1=prediction
             ))
 
-        short_range_frame_queue.append(rgb.clone().cpu())
-        long_range_frame_queue.append(rgb.clone().cpu())
+        short_range_frame_queue.append(prediction.clone().cpu())
+        long_range_frame_queue.append(prediction.clone().cpu())
 
         if len(short_range_frame_queue) > 2:
             short_range_3d_consistency_metrics.append(consistency_metric.compute(
                 first_frame=short_range_frame_queue.pop(0),
-                second_frame=rgb.clone().cpu()
+                second_frame=prediction.clone().cpu()
             ))
 
         if len(long_range_frame_queue) > 8:
             long_range_3d_consistency_metrics.append(consistency_metric.compute(
                 first_frame=long_range_frame_queue.pop(0),
-                second_frame=rgb.clone().cpu()
+                second_frame=prediction.clone().cpu()
             ))
 
         fid_metric.update(
             ground_truth=gt_imgs[i],
-            prediction=rgb
+            prediction=prediction
         )
 
         """
