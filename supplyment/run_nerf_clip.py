@@ -256,6 +256,9 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
                 second_frame=prediction.clone().cpu()
             ))
 
+
+        raise Exception(f'GT: {gt_img.shape}, {gt_img.dtype}, Pred: {prediction.shape}, {prediction.dtype}')
+
         fid_metric.update(
             ground_truth=gt_img,
             prediction=prediction
