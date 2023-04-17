@@ -27,7 +27,7 @@ class ConsistencyMetric:
         args.alternate_corr = True
 
         model = torch.nn.DataParallel(RAFT(args))
-        model.load_state_dict(torch.load(os.path.join(os.getcwd(), 'evaluation', 'raft-things.pth')))
+        model.load_state_dict(torch.load(os.path.join(os.getcwd(), 'metrics', 'raft-things.pth')))
 
         self.model = model.module
         self.model.to(DEVICE)
