@@ -222,8 +222,8 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         ))
 
         clip_directional_metrics.append(clip_directional_metric.compute(
-            image_source=gt_img,
-            image_target=prediction,
+            image_source=gt_img.to('cuda'),
+            image_target=prediction.to('cuda'),
             text_source=source_prompt,
             text_target=target_prompt
         ))
