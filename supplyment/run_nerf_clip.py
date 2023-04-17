@@ -214,7 +214,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             print(rgb.shape, disp.shape)
 
         prediction = torch.permute(rgb, (2, 0, 1)).unsqueeze(0)
-        gt_img = torch.permute(gt_imgs[i], (2, 0, 1)).unsqueeze(0)
+        gt_img = torch.permute(torch.from_numpy(gt_imgs[i]), (2, 0, 1)).unsqueeze(0)
 
         clip_metrics.append(clip_metric.compute(
             image=prediction,
