@@ -1,6 +1,7 @@
 from torch.nn.functional import upsample_bilinear
 from torch.linalg import vector_norm
 import clip
+import torch
 
 
 class CLIPDirectionalMetric:
@@ -19,6 +20,9 @@ class CLIPDirectionalMetric:
 
         encoded_image_source = self.model.encode_image(image_source).squeeze()
         encoded_image_target = self.model.encode_image(image_target).squeeze()
+
+        text_source = torch.cat([clip.tokenize(text_source)]).cuda()
+        text_target = torch.cat([clip.tokenize(text_target)]).cuda()
 
         encoded_text_source = self.model.encode_text(text_source).squeeze()
         encoded_text_target = self.model.encode_text(text_target).squeeze()

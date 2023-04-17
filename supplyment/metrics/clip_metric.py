@@ -13,5 +13,6 @@ class CLIPMetric:
             param.requires_grad = False
 
     def compute(self, image, text):
+        text = torch.cat([clip.tokenize(text)]).cuda()
         image = torch.nn.functional.upsample_bilinear(image, (224, 224))
         return self.model(image, text)[0] / 100
