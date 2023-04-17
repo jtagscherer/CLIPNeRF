@@ -213,8 +213,8 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         if i==0:
             print(rgb.shape, disp.shape)
 
-        prediction = torch.permute(rgb, (2, 0, 1)).unsqueeze(0)
-        gt_img = torch.permute(torch.from_numpy(gt_imgs[i]), (2, 0, 1)).unsqueeze(0)
+        prediction = torch.permute(rgb, (2, 0, 1)).unsqueeze(0).to('cuda')
+        gt_img = torch.permute(torch.from_numpy(gt_imgs[i]), (2, 0, 1)).unsqueeze(0).to('cuda')
 
         clip_metrics.append(clip_metric.compute(
             image=prediction,
@@ -222,8 +222,8 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         ))
 
         clip_directional_metrics.append(clip_directional_metric.compute(
-            image_source=gt_img.to('cuda'),
-            image_target=prediction.to('cuda'),
+            image_source=gt_img,
+            image_target=prediction,
             text_source=source_prompt,
             text_target=target_prompt
         ))
