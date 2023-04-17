@@ -213,7 +213,9 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         if i==0:
             print(rgb.shape, disp.shape)
 
-        prediction = torch.permute(rgb, (2, 0, 1))
+        prediction = torch.permute(rgb, (2, 0, 1)).unsqueeze(0)
+        raise Exception(gt_imgs[i].shape)
+        gt_img = gt_imgs[i].unsqueeze(0)
 
         clip_metrics.append(clip_metric.compute(
             image=prediction,
