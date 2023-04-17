@@ -214,8 +214,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             print(rgb.shape, disp.shape)
 
         prediction = torch.permute(rgb, (2, 0, 1)).unsqueeze(0)
-        raise Exception(gt_imgs[i].shape)
-        gt_img = gt_imgs[i].unsqueeze(0)
+        gt_img = torch.permute(gt_imgs[i], (2, 0, 1)).unsqueeze(0)
 
         clip_metrics.append(clip_metric.compute(
             image=prediction,
@@ -223,14 +222,14 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         ))
 
         clip_directional_metrics.append(clip_directional_metric.compute(
-            image_source=gt_imgs[i],
+            image_source=gt_img,
             image_target=prediction,
             text_source=source_prompt,
             text_target=target_prompt
         ))
 
         clip_temporal_consistency_queue.append({
-            'source': gt_imgs[i].clone(),
+            'source': gt_img.clone(),
             'target': prediction.clone()
         })
 
@@ -258,7 +257,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             ))
 
         fid_metric.update(
-            ground_truth=gt_imgs[i],
+            ground_truth=gt_img,
             prediction=prediction
         )
 
