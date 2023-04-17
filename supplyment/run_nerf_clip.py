@@ -219,14 +219,14 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         clip_metrics.append(clip_metric.compute(
             image=prediction,
             text=target_prompt
-        ).cpu())
+        ).cpu().numpy())
 
         clip_directional_metrics.append(clip_directional_metric.compute(
             image_source=gt_img,
             image_target=prediction,
             text_source=source_prompt,
             text_target=target_prompt
-        ).cpu())
+        ).cpu().numpy())
 
         clip_temporal_consistency_queue.append({
             'source': gt_img.clone(),
@@ -239,7 +239,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
                 image_source_0=item['source'],
                 image_target_0=item['target'],
                 image_target_1=prediction
-            ).cpu())
+            ).cpu().numpy())
 
         short_range_frame_queue.append(prediction.clone().cpu())
         long_range_frame_queue.append(prediction.clone().cpu())
@@ -248,13 +248,13 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             short_range_3d_consistency_metrics.append(consistency_metric.compute(
                 first_frame=short_range_frame_queue.pop(0),
                 second_frame=prediction.clone().cpu()
-            ).cpu())
+            ).cpu().numpy())
 
         if len(long_range_frame_queue) > 8:
             long_range_3d_consistency_metrics.append(consistency_metric.compute(
                 first_frame=long_range_frame_queue.pop(0),
                 second_frame=prediction.clone().cpu()
-            ).cpu())
+            ).cpu().numpy())
 
         fid_metric.update(
             ground_truth=(gt_img.clone().cpu() * 255.0).to(dtype=torch.uint8).to('cuda'),
@@ -295,7 +295,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
     print(f'CLIP Temporal Consistency: Mean {clip_temporal_consistency_metrics.mean()}, Std {clip_temporal_consistency_metrics.std()}')
     print(f'Short-Range 3D Consistency: Mean {short_range_3d_consistency_metrics.mean()}, Std {short_range_3d_consistency_metrics.std()}')
     print(f'Long-Range 3D Consistency: Mean {long_range_3d_consistency_metrics.mean()}, Std {long_range_3d_consistency_metrics.std()}')
-    print(f'FID: {fid_metric.compute().cpu()}')
+    print(f'FID: {fid_metric.compute().cpu().numpy()}')
 
     return rgbs, disps
 
