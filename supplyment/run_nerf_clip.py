@@ -257,8 +257,8 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
             ))
 
         fid_metric.update(
-            ground_truth=(gt_img.clone().cpu() * 255.0).to(dtype=torch.uint8),
-            prediction=(prediction.clone().cpu() * 255.0).to(dtype=torch.uint8)
+            ground_truth=(gt_img.clone().cpu() * 255.0).to(dtype=torch.uint8).to('cuda'),
+            prediction=(prediction.clone().cpu() * 255.0).to(dtype=torch.uint8).to('cuda')
         )
 
         """

@@ -5,7 +5,7 @@ class FIDMetric:
 
     def __init__(self):
         super(FIDMetric, self).__init__()
-        self.fid = FrechetInceptionDistance(feature=64)
+        self.fid = FrechetInceptionDistance(feature=64).to('cuda')
 
     def update(self, ground_truth, prediction):
         self.fid.update(ground_truth, real=True)
