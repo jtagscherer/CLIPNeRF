@@ -291,6 +291,20 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
     print(f'Long-Range 3D Consistency: Mean {long_range_3d_consistency_metrics.mean()}, Std {long_range_3d_consistency_metrics.std()}')
     print(f'FID: {fid_metric.compute().cpu().numpy()}')
 
+    metrics_path = os.path.join(savedir, 'metrics.txt')
+    if os.path.exists(metrics_path):
+        os.remove(metrics_path)
+
+    with open(metrics_path, 'w+') as f:
+        f.write(f'CLIP: Mean {clip_metrics.mean()}, Std {clip_metrics.std()}\n')
+        f.write(f'CLIP Directional: Mean {clip_directional_metrics.mean()}, Std {clip_directional_metrics.std()}\n')
+        f.write(f'CLIP Temporal Consistency: Mean {clip_temporal_consistency_metrics.mean()}, Std {clip_temporal_consistency_metrics.std()}\n')
+        f.write(f'Short-Range 3D Consistency: Mean {short_range_3d_consistency_metrics.mean()}, Std {short_range_3d_consistency_metrics.std()}\n')
+        f.write(f'Long-Range 3D Consistency: Mean {long_range_3d_consistency_metrics.mean()}, Std {long_range_3d_consistency_metrics.std()}\n')
+        f.write(f'FID: {fid_metric.compute().cpu().numpy()}\n')
+
+    print(f'Wrote metrics to {metrics_path}!')
+
     return rgbs, disps
 
 
