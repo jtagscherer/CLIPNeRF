@@ -213,8 +213,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
         if i==0:
             print(rgb.shape, disp.shape)
 
-        raise Exception(rgb.shape)
-        prediction = rgb.transpose((2, 0, 1))
+        prediction = torch.permute(rgb, (2, 0, 1))
 
         clip_metrics.append(clip_metric.compute(
             image=rgb,
