@@ -7,9 +7,9 @@ scenes = {
     "name": "chair"
   },
   "hotdog": {
-    "dataset": "hotdog",
+    "dataset": "mic",
     "article": "a",
-    "name": "hotdog"
+    "name": "microphone"
   },
   "lego": {
     "dataset": "lego",
